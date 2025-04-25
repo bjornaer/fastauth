@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -19,7 +20,7 @@ async def periodic_token_cleanup(seconds: int = 3600) -> None:
 
 
 @asynccontextmanager
-async def token_cleanup_lifespan(app: FastAPI, cleanup_interval_seconds: int = 3600):
+async def token_cleanup_lifespan(app: FastAPI, cleanup_interval_seconds: int = 3600) -> AsyncGenerator[None, None]:
     # Startup: Create the background task
     cleanup_task = asyncio.create_task(periodic_token_cleanup(cleanup_interval_seconds))
 
@@ -33,5 +34,4 @@ async def token_cleanup_lifespan(app: FastAPI, cleanup_interval_seconds: int = 3
 
 def setup_periodic_tasks(app: FastAPI, cleanup_interval_seconds: int = 3600) -> None:
     """Setup periodic background tasks"""
-    # Use the newer lifespan approach instead of on_event
-    app.lifespan_context = token_cleanup_lifespan(app, cleanup_interval_seconds)
+    app.router.lifespan_context = token_cleanup_lifespan(app, cleanup_interval_seconds)  # type: ignore

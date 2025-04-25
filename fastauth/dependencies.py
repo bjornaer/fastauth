@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from fastapi import Depends, HTTPException, Request
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
@@ -25,7 +27,7 @@ def _get_token_from_request(request: Request) -> str | None:
     return None
 
 
-def require_auth(auto_error: bool = True):
+def require_auth(auto_error: bool = True) -> Callable:
     """Dependency for routes that require authentication"""
 
     async def dependency(request: Request) -> TokenData:

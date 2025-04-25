@@ -33,7 +33,12 @@ class TokenManager:
         self.refresh_token_expire_days = refresh_token_expire_days
         self.token_storage = token_storage or MemoryTokenStorage()
 
-    def create_token(self, data: dict[str, Any], token_type: str = "access", add_timestamp_offset: bool = False) -> str:
+    def create_token(
+        self,
+        data: dict[str, Any],
+        token_type: str = "access",
+        add_timestamp_offset: bool = False,
+    ) -> str:
         """Create a new token"""
         to_encode = data.copy()
 
@@ -57,7 +62,7 @@ class TokenManager:
             token_version = self.token_storage.get_user_token_version(user_id)
             to_encode["ver"] = token_version
 
-        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        encoded_jwt: str = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
 
     def create_access_token(self, data: dict[str, Any]) -> str:
@@ -75,7 +80,7 @@ class TokenManager:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
 
-    def create_refresh_token(self, data: dict[str, Any]) -> str:
+    def create_refresh_token(self, data: dict[str, Any]) -> Any:
         """Create a new refresh token"""
         to_encode = data.copy()
         expire = datetime.now(UTC) + timedelta(days=self.refresh_token_expire_days)

@@ -1,4 +1,5 @@
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -11,15 +12,15 @@ from .token import verify_token
 class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
-        app,
-        exclude_paths: list[str] = None,
-        token_getter: Callable[[Request], str | None] = None,
-    ):
+        app: FastAPI,
+        exclude_paths: list[str] | None = None,
+        token_getter: Callable[[Request], str | None] | None = None,
+    ) -> None:
         super().__init__(app)
         self.exclude_paths = exclude_paths or []
         self.token_getter = token_getter or self._default_token_getter
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Any:
         # Skip authentication for excluded paths
         path = request.url.path
         if any(path.startswith(excluded) for excluded in self.exclude_paths):
@@ -73,7 +74,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
 def register_auth_middleware(
     app: FastAPI,
-    exclude_paths: list[str] = None,
+    exclude_paths: list[str] | None = None,
     token_getter: Callable[[Request], str | None] | None = None,
 ) -> None:
     """Register the authentication middleware with a FastAPI app"""

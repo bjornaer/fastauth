@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Cookie, Header, HTTPException, Request, status
@@ -58,14 +59,14 @@ def clear_old_tokens(user_id: str | None = None, max_age_hours: int = 24) -> Non
     storage.clear_old_csrf_tokens(user_id, max_age_hours)
 
 
-def csrf_protection(cookie_name: str = "csrf_token", header_name: str = "X-CSRF-Token"):
+def csrf_protection(cookie_name: str = "csrf_token", header_name: str = "X-CSRF-Token") -> Callable:
     """Dependency for CSRF protection"""
 
     async def dependency(
         request: Request,
         csrf_cookie: str | None = Cookie(None, alias=cookie_name),
         csrf_header: str | None = Header(None, alias=header_name),
-    ):
+    ) -> bool:
         # Safe methods don't need CSRF protection
         if request.method in ["GET", "HEAD", "OPTIONS"]:
             return True

@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from typing import Any
 
+from redis import Redis
+
 
 # Abstract base class for token storage implementations
 class TokenStorage(ABC):
@@ -56,7 +58,7 @@ class TokenStorage(ABC):
 
 # Memory-based implementation (our current approach)
 class MemoryTokenStorage(TokenStorage):
-    def __init__(self):
+    def __init__(self) -> None:
         self._revoked_tokens: set[str] = set()
         self._revoked_for_user: dict[str, set[str]] = {}
         self._token_versions: dict[str, int] = {}
@@ -164,11 +166,11 @@ class MemoryTokenStorage(TokenStorage):
 
 # Redis-based implementation
 class RedisTokenStorage(TokenStorage):
-    def __init__(self, redis_client, prefix: str = "fastauth:"):
+    def __init__(self, redis_client: Redis, prefix: str = "fastauth:") -> None:
         self.redis = redis_client
         self.prefix = prefix
 
-    def _key(self, *parts):
+    def _key(self, *parts: str) -> str:
         return f"{self.prefix}{''.join(parts)}"
 
     def add_revoked_token(self, token: str, user_id: str | None = None) -> None:
@@ -218,7 +220,7 @@ class RedisTokenStorage(TokenStorage):
         version = self.redis.get(self._key("token_version:", user_id))
         return int(version) if version else 0
 
-    def increment_user_token_version(self, user_id: str) -> int:
+    def increment_user_token_version(self, user_id: str) -> Any:
         return self.redis.incr(self._key("token_version:", user_id))
 
     def store_csrf_token(self, user_id: str, token_hash: str, expires_at: datetime) -> None:

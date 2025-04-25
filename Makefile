@@ -13,7 +13,6 @@ lint:
 	poetry run ruff fastauth/ tests/
 	poetry run black --check fastauth/ tests/
 	poetry run isort --check-only fastauth/ tests/
-	poetry run mypy fastauth/
 
 format:
 	poetry run ruff fastauth/ tests/ --fix

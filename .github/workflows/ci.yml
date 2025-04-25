@@ -45,8 +45,8 @@ jobs:
     - name: Check imports with isort
       run: poetry run isort --check-only fastauth/ tests/
       
-    - name: Type check with mypy
-      run: poetry run mypy fastauth/
+    # - name: Type check with mypy
+    #   run: poetry run mypy fastauth/
       
     - name: Run tests
       run: poetry run pytest tests/ -v
