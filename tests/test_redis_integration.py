@@ -62,7 +62,7 @@ def test_redis_connection_used(mock_redis_from_url):
 def test_fallback_to_memory_when_redis_not_available():
     """Test that MemoryTokenStorage is used when redis is not available"""
     # Reset the storage to ensure fresh state
-    from fastauth.token import _token_storage, _token_manager
+    from fastauth.token import _token_manager, _token_storage
 
     # global _token_storage, _token_manager
     _token_storage = None

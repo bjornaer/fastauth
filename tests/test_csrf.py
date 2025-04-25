@@ -2,12 +2,7 @@ import pytest
 from fastapi import Depends, FastAPI, Request
 from fastapi.testclient import TestClient
 
-from fastauth.csrf import (
-    clear_old_tokens,
-    csrf_protection,
-    generate_csrf_token,
-    verify_csrf_token,
-)
+from fastauth.csrf import clear_old_tokens, csrf_protection, generate_csrf_token, verify_csrf_token
 from fastauth.models import User
 from fastauth.token import setup_token_manager
 
