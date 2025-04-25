@@ -13,6 +13,7 @@ python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 python-multipart = "^0.0.6"
 pydantic = "^2.4"
+redis = "^5.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
@@ -57,6 +58,9 @@ ignore = [
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"] # unused imports in __init__ files
+"tests/test_redis_integration.py" = [
+    "ALL",
+] # ignore all linting issues in this file
 
 [build-system]
 requires = ["poetry-core"]

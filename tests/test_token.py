@@ -101,4 +101,5 @@ class TestTokenFunctions:
             refresh_token(token_response.refresh_token, admin_user)
 
         assert exc_info.value.status_code == 401
-        assert "Token does not match user" in exc_info.value.detail
+        # Check for the new error message
+        assert "Token belongs to another user" in exc_info.value.detail

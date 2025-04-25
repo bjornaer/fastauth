@@ -34,6 +34,7 @@ require_role,
 generate_token,
 User
 )
+
 app = FastAPI()
 
 # Setup token manager
@@ -65,9 +66,9 @@ async def login(username: str, password: str):
     # ...
     # If authentication successful, create a user object
     user = User(
-    id="user123",
-    username=username,
-    roles=["user"] # Assign roles as needed
+        id="user123",
+        username=username,
+        roles=["user"] # Assign roles as needed
     )
     # Generate tokens
     tokens = generate_token(user)
@@ -125,15 +126,133 @@ async def refresh_tokens(refresh_token_str: str, user_id: str):
     user = get_user_from_db(user_id)
     # Create User object from your user model
     auth_user = User(
-    id=user.id,
-    username=user.username,
-    roles=user.roles
+        id=user.id,
+        username=user.username,
+        roles=user.roles
     )
     # Refresh the tokens
     new_tokens = refresh_token(refresh_token_str, auth_user)
     return new_tokens
 ```
 
+
+### Token Revocation
+
+```python
+from fastauth import revoke_token, revoke_all_user_tokens
+
+@app.post("/logout")
+async def logout(token: str, user_data = Depends(require_auth())):
+    # Revoke the current token
+    revoke_token(token)
+    return {"message": "Logged out successfully"}
+
+@app.post("/logout-all-devices")
+async def logout_all_devices(user_data = Depends(require_auth())):
+    # Revoke all tokens for this user
+    revoke_all_user_tokens(user_data.user_id)
+    return {"message": "Logged out from all devices"}
+```
+
+### CSRF Protection
+
+```python
+from fastapi import Depends, Cookie, Response
+from fastauth import generate_csrf_token, csrf_protection
+
+# Apply CSRF protection middleware to all routes
+app.middleware("http")(csrf_protection())
+
+@app.post("/login")
+async def login(username: str, password: str, response: Response):
+    # Your authentication logic
+    # ...
+    
+    # Generate tokens
+    user = User(id="user123", username=username, roles=["user"])
+    tokens = generate_token(user)
+    
+    # Generate CSRF token
+    csrf_token = generate_csrf_token(user.id)
+    
+    # Set CSRF token as cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=True,
+        samesite="strict",
+        secure=True  # For HTTPS
+    )
+    
+    return tokens
+
+# Protected route with CSRF protection
+@app.post("/update-profile", dependencies=[Depends(csrf_protection())])
+async def update_profile(data: dict, user_data = Depends(require_auth())):
+    # This route is protected by both authentication and CSRF protection
+    return {"message": "Profile updated"}
+```
+
+### Redis Backend
+
+FastAuth can use Redis for token storage, which is recommended for production environments:
+
+```python
+from fastauth import setup_token_manager
+
+# Setup with Redis
+setup_token_manager(
+    secret_key="your_secret_key",
+    algorithm="HS256", 
+    redis_url="redis://localhost:6379/0"  # Will use Redis if available
+)
+```
+
+### Token Rotation
+
+For enhanced security, you can force token rotation which invalidates all previous tokens:
+
+```python
+from fastauth import rotate_user_tokens
+
+@app.post("/security/rotate-tokens")
+async def rotate_tokens(user = Depends(require_auth())):
+    # Get user from your database
+    db_user = get_user_from_db(user.user_id)
+    
+    # Create User object
+    auth_user = User(
+        id=db_user.id,
+        username=db_user.username,
+        roles=db_user.roles
+    )
+    
+    # Rotate tokens
+    new_tokens = rotate_user_tokens(auth_user)
+    
+    return new_tokens
+```
+
+### Periodic Token Cleanup
+
+Set up automatic cleanup of expired tokens:
+
+```python
+from fastapi import FastAPI
+from fastauth import setup_token_manager
+from fastauth.tasks import setup_periodic_tasks
+
+app = FastAPI()
+
+# Setup token manager
+setup_token_manager(
+    secret_key="your_secret_key",
+    algorithm="HS256"
+)
+
+# Setup token cleanup every hour (3600 seconds)
+setup_periodic_tasks(app, cleanup_interval_seconds=3600)
+```
 
 ## License
 
