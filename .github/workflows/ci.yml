@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: '2.0.1'
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Load cached dependencies
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction
+        
+    - name: Lint with ruff
+      run: poetry run ruff fastauth/ tests/
+      
+    - name: Check formatting with black
+      run: poetry run black --check fastauth/ tests/
+      
+    - name: Check imports with isort
+      run: poetry run isort --check-only fastauth/ tests/
+      
+    - name: Type check with mypy
+      run: poetry run mypy fastauth/
+      
+    - name: Run tests
+      run: poetry run pytest tests/ -v
+      
+    - name: Run tests with coverage
+      run: poetry run pytest tests/ --cov=fastauth --cov-report=xml
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false 
