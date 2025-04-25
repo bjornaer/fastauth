@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "fastauth"
+name = "fastapi-auth"
 version = "0.1.0"
 description = "Authentication middleware for FastAPI with JWT and role-based access control"
 authors = ["Your Name <your.email@example.com>"]
